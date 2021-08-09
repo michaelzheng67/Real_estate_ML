@@ -4,4 +4,6 @@
 
 
 # Modular imports
-from simulation import Simulation
+from simulation import Simulation, Property
+
+print(Simulation.new_house_array())

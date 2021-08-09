@@ -25,8 +25,9 @@ class Simulation:
         self.cash_appreciation = self.__random_cash_appreciation() - self.__random_inflation() - self.__black_swan()
         return self.cash_appreciation
 
-    def new_house_array(self):
-        return abs(np.random.normal(700000, 1000000,10)) # returns array of 10 houses for player to purchase
+    @ staticmethod
+    def new_house_array():
+        return [Property() for i in range(10)] # Returns list of 10 property objects
 
     # Private methods to generate random variables for environment
 
@@ -49,4 +50,13 @@ class Simulation:
         else:
             return 0
 
+
+# Class to generate random real estate property
+
+class Property:
+    def __init__(self):
+        self.purchase_price = abs(np.random.normal(700000,1000000))
+        self.rent_yield = np.random.normal(5, 10)
+        self.expenses_rate = abs(np.random.normal(1, 3))
+        self.appreciation_rate = np.random.normal(7, 10)
 
