@@ -7,7 +7,7 @@ import random
 
 class Simulation:
 
-    def __init__(self, interest_rate, inflation, cash_appreciation):
+    def __init__(self):
         self.interest_rate = self.__random_interest_rate()
         self.inflation = self.__random_inflation()
         self.cash_appreciation = self.__random_cash_appreciation() - self.__random_inflation() - self.__black_swan()
