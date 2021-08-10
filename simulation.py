@@ -41,7 +41,7 @@ class Simulation:
 
     @staticmethod
     def __random_cash_appreciation():
-        return np.random.normal(10, 20)
+        return np.random.normal(8, 10)
 
     @staticmethod
     def __black_swan():
