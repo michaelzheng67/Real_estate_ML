@@ -22,7 +22,7 @@ class Simulation:
         return self.inflation
 
     def new_cash_appreciation(self):
-        self.cash_appreciation = self.__random_cash_appreciation() - self.__random_inflation() - self.__black_swan()
+        self.cash_appreciation = self.__random_cash_appreciation() - self.__black_swan()
         return self.cash_appreciation
 
     @ staticmethod
@@ -52,7 +52,7 @@ class Simulation:
 
 
 # Class to generate random real estate property
-
+# Remember to incorporate inflation and interest rates to these properties
 class Property:
     def __init__(self):
         self.purchase_price = abs(np.random.normal(700000,1000000))
