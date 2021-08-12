@@ -1,4 +1,9 @@
-# Real Estate AI
-###### Purpose: To create a model that learns based on an artificially created real estate environment that understands the optimal strategies to take when buying/selling/refinancing real estate property
+# Real Estate AI/ML
+## Purpose: To develop a real-estate investment strategy catered to an individual's personal financials, balancing maximum growth with healthy risk. 
 
-Built with a focus on utilizing pyTorch to create the model 
+This project is comprised of 3 main components:
+  1. A virtual environment that semi-accurately represents the real-estate market;
+  2. An agent that makes decisions within our environment; and
+  3. A model or algorithmn that finds optimal paths and strategies to succeed within our environment
+
+
