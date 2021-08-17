@@ -1,8 +1,8 @@
 class Taxes:
 
-    def __init__(self, cash):
-        self.tax_free = self.tax_free_amount(cash)
-        self.taxable = cash - self.tax_free
+    def __init__(self, income):
+        self.tax_free = self.tax_free_amount(income)
+        self.taxable = income - self.tax_free
 
     @staticmethod
     def tax_free_amount(cash):
