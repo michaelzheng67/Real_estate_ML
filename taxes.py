@@ -1,5 +1,4 @@
 class Taxes:
-
     def __init__(self, cash):
         self.remaining_cash = self.pay_tax_provincial(cash)
         self.tfsa = self.tfsa_tax_free(self.remaining_cash)
