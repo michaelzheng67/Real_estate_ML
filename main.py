@@ -11,7 +11,7 @@ from simulation import Simulation, Property, mortgage_financials, update_propert
 
 owned_properties = []
 
-cash = 100_000_000
+cash = 100_000
 saved_monthly_income = 5_000 # placeholder
 
 

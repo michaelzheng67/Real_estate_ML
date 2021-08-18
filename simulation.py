@@ -71,6 +71,7 @@ class Property:
         self.term_length = 1
         self.status = 0 # 0 means can buy, 1 means owned
         self.cash_flow = 0
+        self.accrued_gains = 0
         self.total_monthly_payments, self.monthly_interest_payments, self.monthly_principal_payments = mortgage_financials(self.purchase_price, self.down_payment, self.interest_rate, self.term_length, self.loan_outstanding)
 
 
@@ -147,8 +148,8 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
         property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
         property.down_payment = property.purchase_price * 0.2
         property.loan_outstanding = property.purchase_price - property.down_payment
-        property.term_length = 240
         property.status = 1
+        property.term_length = 240
 
         # Adds new property to list of owned properties, removes down payment from cash account
         cash = cash - property.purchase_price * 0.2
@@ -184,6 +185,11 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
     elif dec == '4' and property.status == 1:
         # Cash account increased by difference between sale price and amount of debt still owing
         cash = cash + property.price - property.loan_outstanding
+        # Adds change in property value since purchase/refinance to capital gains account
+        property.accrued_gains = property.accrued_gains + property.price - property.purchase_price
+
+        # Future Note: return gains to main.py or taxes.
+
         # Property removed from list of owned properties.
         # N_dels keeps track of how many properties have been deleted that month to avoid index running out of bounds.
         owned_properties.pop(index-n_dels)
@@ -194,7 +200,8 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
         # Cash account increased by difference between property value and the sum of debt owing and 20% down payment
         cash = cash + property.price - property.loan_outstanding - property.price * 0.2
         # Resets the property attributes, to reflect the new mortgage
-        property.purchase_price = property.price # Resets house with refinance, will have to track accrued capital gains somewhere else
+        property.accrued_gains = property.price - property.purchase_price # Tracks capital gains
+        property.purchase_price = property.price # Resets house with refinance
         property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
         property.down_payment = property.purchase_price * 0.2
         property.loan_outstanding = property.purchase_price - property.down_payment
