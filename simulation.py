@@ -119,6 +119,63 @@ def update_properties(owned_property_array):
 
 
 
+def decision(property,cash,interest_rate,owned_properties,index,n_dels):
+    print("""
+    1. Mortgage, 20 year + 20% down payment (${0:,.2f})
+    2. Mortgage, 30 year + 20% down payment (${0:,.2f})
+    3. Buy Outright
+    4. Sell
+    5. Refinance
+    6. Pass
+               """.format(property.purchase_price * 0.2))
+    dec = input("Decision:")
+    if dec == '1' and property.status == 0 and cash >= property.purchase_price * 0.2:
+
+        property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
+        property.down_payment = property.purchase_price * 0.2
+        property.loan_outstanding = property.purchase_price - property.down_payment
+        property.term_length = 240
+        property.status = 1
+
+        cash = cash - property.purchase_price * 0.2
+        owned_properties.append(property)
+
+
+    elif dec == '2' and property.status == 0 and cash >= property.purchase_price * 0.2:
+        property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
+        property.down_payment = property.purchase_price * 0.2
+        property.loan_outstanding = property.purchase_price - property.down_payment
+        property.term_length = 360
+        property.status = 1
+
+        owned_properties.append(property)
+        cash = cash - property.purchase_price * 0.2
+
+    elif dec == '3' and property.status == 0 and cash >= property.purchase_price:
+        property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
+        property.down_payment = property.purchase_price
+        property.loan_outstanding = 0
+        property.term_length = 360
+        property.status = 1
+
+        cash = cash - property.purchase_price
+
+        owned_properties.append(property)
+
+    elif dec == '4' and property.status == 1:
+        cash = cash + property.price - property.loan_outstanding
+        owned_properties.pop(index-n_dels)
+        n_dels = n_dels + 1
+
+    elif dec == '5' and property.status == 1:
+        pass
+    elif dec == '6':
+        pass
+
+    else:
+        print("Invalid Choice")
+
+    return cash, n_dels
 
 
 
