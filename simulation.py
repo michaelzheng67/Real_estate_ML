@@ -109,13 +109,6 @@ def update_properties(owned_property_array):
         owned_property_array[i].cash_flow = owned_property_array[i].rent_yield/12 * owned_property_array[i].purchase_price*(1-owned_property_array[i].expenses_rate) - owned_property_array[i].total_monthly_payments
 
 
-        #print("Property:", i+1, "Price:", owned_property_array[i].price, "Monthly Mortgage Payment", owned_property_array[i].total_monthly_payments,
-              #owned_property_array[i].monthly_principal_payments, owned_property_array[i].monthly_interest_payments, owned_property_array[i].loan_outstanding)
-
-        #print("Property: {0} | Price: ${1:,.2f} | Mortgage Payment: ${2:,.2f} | Principal Payment: ${3:,.2f} | Interest Payment: ${4:,.2f} | Loan Outstanding ${5:,.2f}".format(i+1,
-            #owned_property_array[i].price, owned_property_array[i].total_monthly_payments,
-            #owned_property_array[i].monthly_principal_payments, owned_property_array[i].monthly_interest_payments, owned_property_array[i].loan_outstanding))
-
 
 
 

@@ -1,20 +1,29 @@
+
+# Note: takes inflation in decimal form
 class Taxes:
-    def __init__(self, cash):
-        self.remaining_cash = self.pay_tax_provincial(cash)
-        self.tfsa = self.tfsa_tax_free(self.remaining_cash)
-        self.rrsp = self.rrsp_tax_free()
+    def __init__(self, cash, inflation):
+        self.remaining_cash = cash - self.pay_tax_provincial(cash)
+        self.tfsa = self.tfsa + self.tfsa_tax_free(self.remaining_cash, inflation)
+        self.rrsp = self.rrsp + (self.rrsp_tax_free(inflation) if cash > 216511 else 0) # no rrsp contrib unless in highest bracket
+
+
+        # 2021 figures for contribution room (initialize)
+        self.rrsp_contrib_room = 27830
+        self.tfsa_contrib_room = 6000
 
         # reflect the change in cash account after depositing into tfsa
         self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash)
 
+    def tfsa_tax_free(self, cash, inflation):
+        # update contribution room with inflation
+        self.tfsa_contrib_room = self.tfsa_contrib_room * (1 + inflation)
 
-    @staticmethod
-    def tfsa_tax_free(cash):
-        return 6000 if cash >= 6000 else cash # change to reflect growing contrib limit
+        return self.tfsa_contrib_room if cash >= self.tfsa_contrib_room else cash
 
-    @staticmethod
-    def rrsp_tax_free():
-        return 27830 # change later on to reflect growing contribution limit
+    def rrsp_tax_free(self, inflation):
+        # update contrib room
+        self.rrsp_contrib_room = self.rrsp_contrib_room * (1 + inflation)
+        return self.rrsp_contrib_room
 
     @staticmethod
     def pay_tax_provincial(cash):
@@ -24,7 +33,9 @@ class Taxes:
         if cash > 216511:      # If in highest tax bracket, deduct rrsp contribution amount
             cash -= 27830
 
-        if cash <= 49020:
+        if cash <= 13000:
+            return 0
+        elif cash <= 49020:
             first = cash
         elif cash <= 98040:
             first = 49020
