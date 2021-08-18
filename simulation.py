@@ -161,7 +161,13 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
         n_dels = n_dels + 1
 
     elif dec == '5' and property.status == 1:
-        pass
+        cash = cash + property.price - property.loan_outstanding - property.price * 0.2
+        property.purchase_price = property.price # Resets house with refinance, will have to track accrued capital gains somewhere else
+        property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
+        property.down_payment = property.purchase_price * 0.2
+        property.loan_outstanding = property.purchase_price - property.down_payment
+        property.term_length = 360
+        owned_properties[index] = property
     elif dec == '6':
         pass
 
