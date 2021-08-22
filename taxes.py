@@ -1,11 +1,13 @@
 
-# Note: takes inflation in decimal form
+# Note: takes inflation in decimal form. Split variable used to determine split between cash account
+# and investing account (e.g 0.2 means 20% cash, 80% investing)
 class Taxes:
-    def __init__(self, cash, inflation):
-        self.remaining_cash = cash - self.pay_tax_provincial(cash)
-        self.tfsa = self.tfsa + self.tfsa_tax_free(self.remaining_cash, inflation)
-        self.rrsp = self.rrsp + (self.rrsp_tax_free(inflation) if cash > 216511 else 0) # no rrsp contrib unless in highest bracket
-
+    def __init__(self, cash, inflation, split):
+        self.remaining_cash = cash - self.pay_tax_provincial(cash) - self.pay_tax_federal(cash)
+        self.tfsa =  self.tfsa_tax_free(self.remaining_cash, inflation)
+        self.rrsp = self.rrsp_tax_free(inflation) if cash > 216511 else 0 # no rrsp contrib unless in highest bracket
+        self.cash_account = self.remaining_cash * split
+        self.investing_account = self.remaining_cash * (1 - split)
 
         # 2021 figures for contribution room (initialize)
         self.rrsp_contrib_room = 27830
@@ -13,6 +15,19 @@ class Taxes:
 
         # reflect the change in cash account after depositing into tfsa
         self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash)
+
+    def update_taxes(self, cash, inflation, split):
+            self.remaining_cash = self.remaining_cash + cash - self.pay_tax_provincial(cash) - self.pay_tax_federal(cash)
+            self.tfsa = self.tfsa + self.tfsa_tax_free(self.remaining_cash, inflation)
+            self.rrsp = self.rrsp + (
+            self.rrsp_tax_free(inflation) if cash > 216511 else 0)  # no rrsp contrib unless in highest bracket
+            self.cash_account = self.cash_account + self.remaining_cash * split
+            self.investing_account = self.investing_account + self.remaining_cash * (1 - split)
+
+            # reflect the change in cash account after depositing into tfsa
+            self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash)
+
+
 
     def tfsa_tax_free(self, cash, inflation):
         # update contribution room with inflation
