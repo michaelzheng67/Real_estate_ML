@@ -1,6 +1,7 @@
 # imports
 import numpy as np
 import random
+from brownian-motion import simulate
 
 # Define a simulation environment
 
@@ -46,6 +47,7 @@ class Simulation:
             return np.random.normal(-15, 40)
         else:
             return 0
+
 
 
 # Class to generate random real estate property
