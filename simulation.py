@@ -1,7 +1,7 @@
 # imports
 import numpy as np
 import random
-from brownian-motion import simulate
+from brownian_motion import simulate_brownian_motion
 
 # Define a simulation environment
 
