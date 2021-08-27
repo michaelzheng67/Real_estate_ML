@@ -8,45 +8,16 @@ from brownian_motion import simulate_brownian_motion
 
 class Simulation:
 
+    # Not sure how accurate these motions with these initials will be
     def __init__(self):
-        self.interest_rate = self.__random_interest_rate()
-        self.inflation = self.__random_inflation()
-        self.cash_appreciation = self.__random_cash_appreciation()
-        self.available_property = [Property() for i in range(3)]  # Returns list of 10 property objects
-
-    # Return new value methods
-    def new_interest_rate(self):
-        self.interest_rate = self.__random_interest_rate()
-        return self.interest_rate
-
-    def new_inflation(self):
-        self.inflation = self.__random_inflation()
-        return self.inflation
-
-    def new_cash_appreciation(self):
-        self.cash_appreciation = self.__random_cash_appreciation() - self.__black_swan()
-        return self.cash_appreciation
-
-    # Private methods to generate random variables for environment
+        self.interest_rate = simulate_brownian_motion(.03)
+        self.inflation = simulate_brownian_motion(.02)
+        self.cash_appreciation = simulate_brownian_motion(.08)
 
     @staticmethod
-    def __random_interest_rate():
-        return np.random.normal(.03, .01)
+    def new_properties():
+        return [Property() for i in range(3)]   # get array of 3 properties
 
-    @staticmethod
-    def __random_inflation():
-        return np.random.normal(.02, .01)
-
-    @staticmethod
-    def __random_cash_appreciation():
-        return np.random.normal(.08, .10)
-
-    @staticmethod
-    def __black_swan():
-        if random.randint(1, 100) == 50:
-            return np.random.normal(-15, 40)
-        else:
-            return 0
 
 
 
