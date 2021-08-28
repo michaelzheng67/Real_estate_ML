@@ -1,27 +1,13 @@
 
 # Note: takes inflation in decimal form. Split variable used to determine split between cash account
 # and investing account (e.g 0.2 means 20% cash, 80% investing)
+# we should add saving ratio and subtract from remaining cash. can be pre-tax or post-tax
 class Taxes:
     def __init__(self, cash, inflation, split):
-        # Create method to factor in appreciation for investing accounts
-
-        self.remaining_cash = cash - self.pay_tax_federal(cash) - self.pay_tax_provincial(cash)
-        self.tfsa =  self.tfsa_tax_free(self.remaining_cash, inflation)
-        self.rrsp = self.rrsp_tax_free(inflation) if cash > self.prov_fourth_divider else 0 # no rrsp contrib unless in highest bracket
-        self.cash_account = self.remaining_cash * split
-        self.investing_account = self.remaining_cash * (1 - split)
-
-        # 2021 figures for contribution room (initialize)
-        self.rrsp_contrib_room = 27830
-        self.tfsa_contrib_room = 6000
-        self.carry_tfsa_room = 0
-
-        # reflect the change in cash account after depositing into tfsa
-        self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash)
 
         # Initialize bracket amounts for federal and provincial taxes
         # Federal brackets
-        self.fed_tax_free = 13000 # below this amount is tax free
+        self.fed_tax_free = 13000  # below this amount is tax free
         self.fed_first_divider = 49020
         self.fed_second_divider = 98040
         self.fed_third_divider = 151978
@@ -33,17 +19,37 @@ class Taxes:
         self.prov_third_divider = 150000
         self.prov_fourth_divider = 220000
 
+        # 2021 figures for contribution room (initialize)
+        self.rrsp_contrib_room = 27830
+        self.tfsa_contrib_room = 6000
+        self.carry_tfsa_room = 0
+
+        # Create method to factor in appreciation for investing accounts
+        #self.remaining_cash = cash - self.pay_tax_federal(cash) - self.pay_tax_provincial(cash)
+        # After-tax money for first payment
+        self.remaining_cash = cash
+        self.rrsp = self.rrsp_tax_free(inflation) if cash > self.prov_fourth_divider else 0 # no rrsp contrib unless in highest bracket
+        self.tfsa = self.tfsa_tax_free(self.remaining_cash, inflation)
+
+        # reflect the change in cash account after depositing into tfsa
+        self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash, inflation)
+
+        self.cash_account = self.remaining_cash * split
+        self.investing_account = self.remaining_cash * (1 - split)
+
+
 
     def update_taxes(self, cash, inflation, split):
             self.remaining_cash = self.remaining_cash + cash - self.pay_tax_federal(cash) - self.pay_tax_provincial(cash)
-            self.tfsa = self.tfsa + self.tfsa_tax_free(self.remaining_cash, inflation)
             self.rrsp = self.rrsp + (
-            self.rrsp_tax_free(inflation) if cash > 216511 else 0)  # no rrsp contrib unless in highest bracket
-            self.cash_account = self.cash_account + self.remaining_cash * split
-            self.investing_account = self.investing_account + self.remaining_cash * (1 - split)
+                self.rrsp_tax_free(inflation) if cash > 216511 else 0)  # no rrsp contrib unless in highest bracket
+            self.tfsa = self.tfsa + self.tfsa_tax_free(self.remaining_cash, inflation)
 
             # reflect the change in cash account after depositing into tfsa
-            self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash)
+            self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash,inflation)
+
+            self.cash_account = self.cash_account + self.remaining_cash * split
+            self.investing_account = self.investing_account + self.remaining_cash * (1 - split)
 
             # Update tax bracket figures
             # Federal brackets
@@ -128,6 +134,9 @@ class Taxes:
 
 
     def pay_tax_provincial(self, cash):
+
+        # These represent the 5 tax brackets
+        first, second, third, fourth, fifth = 0, 0, 0, 0, 0
 
         if cash > self.prov_fourth_divider:      # If in highest tax bracket, deduct rrsp contribution amount
             cash -= 27830

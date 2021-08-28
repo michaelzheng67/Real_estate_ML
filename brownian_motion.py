@@ -13,7 +13,6 @@ def simulate_brownian_motion(initial, time=40, steps=480, mu=0.1, sigma=0.05):
     w = np.cumsum(w) * np.sqrt(dt)
     x = (mu - 0.5 * sigma ** 2) * t + sigma * w
     s = initial * np.exp(x)
-    print(type(s))
     return s
 
 
