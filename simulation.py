@@ -114,6 +114,10 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
     # Receives input from keyboard (or agent later)
     dec = input("Decision:")
 
+    # Init Variable
+    capital_gains = 0
+
+
     # --- Decision effects ---
     # Mortgage, 20 year + 20% down
     if dec == '1' and property.status == 0 and cash >= property.purchase_price * 0.2:
@@ -159,7 +163,7 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
         # Cash account increased by difference between sale price and amount of debt still owing
         cash = cash + property.price - property.loan_outstanding
         # Adds change in property value since purchase/refinance to capital gains account
-        property.accrued_gains = property.accrued_gains + property.price - property.purchase_price
+        capital_gains = property.accrued_gains + property.price - property.purchase_price
 
         # Future Note: return gains to main.py or taxes.
 
@@ -191,7 +195,7 @@ def decision(property,cash,interest_rate,owned_properties,index,n_dels):
     else:
         print("Invalid Choice")
     # Returns updated cash account and # of properties sold thus far in the month
-    return cash, n_dels
+    return cash, n_dels, capital_gains
 
 
 
