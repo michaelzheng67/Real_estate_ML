@@ -2,6 +2,7 @@
 import numpy as np
 import random
 from brownian_motion import simulate_brownian_motion
+from transaction_helper import payment_selection
 
 # Define a simulation environment
 
@@ -104,7 +105,10 @@ def update_properties(owned_property_array):
                                                 i].total_monthly_payments
 
 # Receives decision from player or agent on current property shown
-def decision(property, cash, interest_rate, owned_properties, index, n_dels):
+def decision(property, tfsa, rrsp, investment_account, cash_account, interest_rate, owned_properties, index, n_dels):
+
+    total_liquid_assets = tfsa + rrsp + investment_account + cash_account
+
     # Shows options to player
     print("""
         1. Mortgage, 20 year + 20% down payment (${0:,.2f})
@@ -123,7 +127,7 @@ def decision(property, cash, interest_rate, owned_properties, index, n_dels):
 
     # --- Decision effects ---
     # Mortgage, 20 year + 20% down
-    if dec == '1' and property.status == 0 and cash >= property.purchase_price * 0.2:
+    if dec == '1' and property.status == 0 and total_liquid_assets >= property.purchase_price * 0.2:
         # Alters attributes to reflect mortgage type + owned status
         property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
         property.down_payment = property.purchase_price * 0.2
@@ -132,11 +136,15 @@ def decision(property, cash, interest_rate, owned_properties, index, n_dels):
         property.term_length = 240
 
         # Adds new property to list of owned properties, removes down payment from cash account
-        cash = cash - property.purchase_price * 0.2
+        total_liquid_assets = total_liquid_assets - property.purchase_price * 0.2
+        tfsa, rrsp, cash_account, investment_account, investment_used, rrsp_used = payment_selection(tfsa, rrsp,
+                                                                                                     cash_account,
+                                                                                                     investment_account,
+                                                                                                     property.purchase_price * 0.2)
         owned_properties.append(property)
 
     # Mortgage, 30 year + 20% down
-    elif dec == '2' and property.status == 0 and cash >= property.purchase_price * 0.2:
+    elif dec == '2' and property.status == 0 and total_liquid_assets >= property.purchase_price * 0.2:
         # Alters attributes to reflect mortgage type + owned status
         property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
         property.down_payment = property.purchase_price * 0.2
@@ -145,11 +153,15 @@ def decision(property, cash, interest_rate, owned_properties, index, n_dels):
         property.status = 1
 
         # Adds new property to list of owned properties, removes down payment from cash account
-        cash = cash - property.purchase_price * 0.2
+        total_liquid_assets = total_liquid_assets - property.purchase_price * 0.2
+        tfsa, rrsp, cash_account, investment_account, investment_used, rrsp_used = payment_selection(tfsa, rrsp,
+                                                                                                     cash_account,
+                                                                                                     investment_account,
+                                                                                                     property.purchase_price * 0.2)
         owned_properties.append(property)
 
     # Bought in full, no mortgage
-    elif dec == '3' and property.status == 0 and cash >= property.purchase_price:
+    elif dec == '3' and property.status == 0 and total_liquid_assets >= property.purchase_price:
         # Alters attributes to reflect mortgage type (or lack thereof) + owned status
         property.interest_rate = interest_rate  # can add 1% onto rate due to fixed rates being higher, number is placeholder
         property.down_payment = property.purchase_price
@@ -158,13 +170,17 @@ def decision(property, cash, interest_rate, owned_properties, index, n_dels):
         property.status = 1
 
         # Adds new property to list of owned properties, removes full purchase price from cash account
-        cash = cash - property.purchase_price
+        total_liquid_assets = total_liquid_assets - property.purchase_price
+        tfsa, rrsp, cash_account, investment_account, investment_used, rrsp_used = payment_selection(tfsa, rrsp,
+                                                                                                     cash_account,
+                                                                                                     investment_account,
+                                                                                                     property.purchase_price)
         owned_properties.append(property)
 
     # Sells property
     elif dec == '4' and property.status == 1:
         # Cash account increased by difference between sale price and amount of debt still owing
-        cash = cash + property.price - property.loan_outstanding
+        total_liquid_assets = total_liquid_assets + property.price - property.loan_outstanding
         # Adds change in property value since purchase/refinance to capital gains account
         capital_gains = property.accrued_gains + property.price - property.purchase_price
 
@@ -178,7 +194,7 @@ def decision(property, cash, interest_rate, owned_properties, index, n_dels):
     # Refinances property, leaves 20% of property value in as equity
     elif dec == '5' and property.status == 1:
         # Cash account increased by difference between property value and the sum of debt owing and 20% down payment
-        cash = cash + property.price - property.loan_outstanding - property.price * 0.2
+        total_liquid_assets = total_liquid_assets + property.price - property.loan_outstanding - property.price * 0.2
         # Resets the property attributes, to reflect the new mortgage
         property.accrued_gains = property.price - property.purchase_price  # Tracks capital gains
         property.purchase_price = property.price  # Resets house with refinance
@@ -198,8 +214,7 @@ def decision(property, cash, interest_rate, owned_properties, index, n_dels):
     else:
         print("Invalid Choice")
     # Returns updated cash account and # of properties sold thus far in the month
-    return cash, n_dels, capital_gains
-
+    return total_liquid_assets, n_dels, capital_gains
 
 
 
