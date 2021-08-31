@@ -2,6 +2,11 @@
 # Note: takes inflation in decimal form. Split variable used to determine split between cash account
 # and investing account (e.g 0.2 means 20% cash, 80% investing)
 # we should add saving ratio and subtract from remaining cash. can be pre-tax or post-tax
+
+# Include assets growing in accounts
+# Include capital gains member (Investing account)
+# Make update investment accounts to update investment accounts monthly
+
 class Taxes:
     def __init__(self, cash, inflation, split):
 
@@ -23,6 +28,7 @@ class Taxes:
         self.rrsp_contrib_room = 27830
         self.tfsa_contrib_room = 6000
         self.carry_tfsa_room = 0
+        self.carry_rrsp_room = 0
 
         # Create method to factor in appreciation for investing accounts
         #self.remaining_cash = cash - self.pay_tax_federal(cash) - self.pay_tax_provincial(cash)
@@ -36,6 +42,7 @@ class Taxes:
 
         self.cash_account = self.remaining_cash * split
         self.investing_account = self.remaining_cash * (1 - split)
+        self.remaining_cash = 0
 
 
 
@@ -50,6 +57,8 @@ class Taxes:
 
             self.cash_account = self.cash_account + self.remaining_cash * split
             self.investing_account = self.investing_account + self.remaining_cash * (1 - split)
+
+            self.remaining_cash = 0
 
             # Update tax bracket figures
             # Federal brackets
@@ -71,19 +80,33 @@ class Taxes:
         self.tfsa_contrib_room = self.tfsa_contrib_room * (1 + inflation)
 
         if cash < self.tfsa_contrib_room: # If we don't use all the contrib room, we carry forward
-            self.carry_tfsa_room = self.tfsa_contrib_room - cash
+            self.carry_tfsa_room = self.carry_tfsa_room + self.tfsa_contrib_room - cash
+            return cash
         elif cash >= self.tfsa_contrib_room + self.carry_tfsa_room:
+            temp = self.carry_tfsa_room
             self.carry_tfsa_room = 0
-            return self.tfsa_contrib_room + self.carry_tfsa_room # Use all of contrib room + carry
+            return self.tfsa_contrib_room + temp # Use all of contrib room + carry
         else:  # only other option is cash maxes out current contrib but is less than carry
-            self.carry_tfsa_room = cash - self.tfsa_contrib_room
+            self.carry_tfsa_room = self.tfsa_contrib_room - (cash - self.tfsa_contrib_room)
             return cash  # Use carry room, can just return cash amount
 
 
 
-    def rrsp_tax_free(self, inflation):
+    def rrsp_tax_free(self, cash, inflation):
         # update contrib room
         self.rrsp_contrib_room = self.rrsp_contrib_room * (1 + inflation)
+
+        # Under the assumption that we will max out the rrsp contrib room for the year since we
+        # will be in highest bracket when using
+
+        if cash >= self.rrsp_contrib_room + self.carry_rrsp_room:
+            temp = self.carry_rrsp_room
+            self.carry_rrsp_room = 0
+            return self.rrsp_contrib_room + temp
+        else:
+            # Cash more than contrib but less than carry room
+            self.carry_rrsp_room = self.carry_rrsp_room - (cash - self.rrsp_contrib_room)
+
         return self.rrsp_contrib_room
 
 
