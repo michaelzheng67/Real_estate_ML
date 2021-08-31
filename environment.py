@@ -7,7 +7,6 @@ from simulation import Simulation, Property, mortgage_financials, decision, upda
 from taxes import Taxes
 
 
-# Probably want to make this a class to allow for multiple agents to run concurrent
 
 class Environment:
     def __init__(self):

@@ -1,3 +1,5 @@
+# Withdraws money from accounts when making a purchase
+# Order of choice is tax based
 def payment_selection(financial_accounts, price):
     if price > financial_accounts.cash_account:
         price -= financial_accounts.cash_account
