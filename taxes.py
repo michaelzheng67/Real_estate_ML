@@ -36,6 +36,7 @@ class Taxes:
 
         self.cash_account = self.remaining_cash * split
         self.investing_account = self.remaining_cash * (1 - split)
+        self.remaining_cash = 0
 
 
 
@@ -50,6 +51,7 @@ class Taxes:
 
             self.cash_account = self.cash_account + self.remaining_cash * split
             self.investing_account = self.investing_account + self.remaining_cash * (1 - split)
+            self.remaining_cash = 0
 
             # Update tax bracket figures
             # Federal brackets
@@ -64,6 +66,7 @@ class Taxes:
             self.prov_second_divider *= inflation
             self.prov_third_divider *= inflation
             self.prov_fourth_divider *= inflation
+
 
 
     def tfsa_tax_free(self, cash, inflation):

@@ -105,9 +105,9 @@ def update_properties(owned_property_array):
                                                 i].total_monthly_payments
 
 # Receives decision from player or agent on current property shown
-def decision(property, tfsa, rrsp, investment_account, cash_account, interest_rate, owned_properties, index, n_dels):
+def decision(property, financial_accounts, interest_rate, owned_properties, index, n_dels):
 
-    total_liquid_assets = tfsa + rrsp + investment_account + cash_account
+    total_liquid_assets = financial_accounts.tfsa + financial_accounts.rrsp + financial_accounts.investing_account + financial_accounts.cash_account
 
     # Shows options to player
     print("""
@@ -136,11 +136,9 @@ def decision(property, tfsa, rrsp, investment_account, cash_account, interest_ra
         property.term_length = 240
 
         # Adds new property to list of owned properties, removes down payment from cash account
-        total_liquid_assets = total_liquid_assets - property.purchase_price * 0.2
-        tfsa, rrsp, cash_account, investment_account, investment_used, rrsp_used = payment_selection(tfsa, rrsp,
-                                                                                                     cash_account,
-                                                                                                     investment_account,
-                                                                                                     property.purchase_price * 0.2)
+        #total_liquid_assets = total_liquid_assets - property.purchase_price * 0.2
+        financial_accounts, investment_used, rrsp_used = payment_selection(financial_accounts, property.purchase_price * 0.2)
+
         owned_properties.append(property)
 
     # Mortgage, 30 year + 20% down
@@ -153,11 +151,8 @@ def decision(property, tfsa, rrsp, investment_account, cash_account, interest_ra
         property.status = 1
 
         # Adds new property to list of owned properties, removes down payment from cash account
-        total_liquid_assets = total_liquid_assets - property.purchase_price * 0.2
-        tfsa, rrsp, cash_account, investment_account, investment_used, rrsp_used = payment_selection(tfsa, rrsp,
-                                                                                                     cash_account,
-                                                                                                     investment_account,
-                                                                                                     property.purchase_price * 0.2)
+        #total_liquid_assets = total_liquid_assets - property.purchase_price * 0.2
+        financial_accounts, investment_used, rrsp_used = payment_selection(financial_accounts, property.purchase_price * 0.2)
         owned_properties.append(property)
 
     # Bought in full, no mortgage
@@ -170,19 +165,17 @@ def decision(property, tfsa, rrsp, investment_account, cash_account, interest_ra
         property.status = 1
 
         # Adds new property to list of owned properties, removes full purchase price from cash account
-        total_liquid_assets = total_liquid_assets - property.purchase_price
-        tfsa, rrsp, cash_account, investment_account, investment_used, rrsp_used = payment_selection(tfsa, rrsp,
-                                                                                                     cash_account,
-                                                                                                     investment_account,
-                                                                                                     property.purchase_price)
+        #total_liquid_assets = total_liquid_assets - property.purchase_price
+        financial_accounts, investment_used, rrsp_used = payment_selection(financial_accounts, property.purchase_price)
         owned_properties.append(property)
 
     # Sells property
     elif dec == '4' and property.status == 1:
-        # Cash account increased by difference between sale price and amount of debt still owing
-        total_liquid_assets = total_liquid_assets + property.price - property.loan_outstanding
         # Adds change in property value since purchase/refinance to capital gains account
         capital_gains = property.accrued_gains + property.price - property.purchase_price
+
+        # Cash account increased by difference between sale price and amount of debt still owing
+        financial_accounts.remaining_cash = financial_accounts.remaining_cash + property.price - property.loan_outstanding - capital_gains
 
         # Future Note: return gains to main.py or taxes.
 
@@ -194,7 +187,7 @@ def decision(property, tfsa, rrsp, investment_account, cash_account, interest_ra
     # Refinances property, leaves 20% of property value in as equity
     elif dec == '5' and property.status == 1:
         # Cash account increased by difference between property value and the sum of debt owing and 20% down payment
-        total_liquid_assets = total_liquid_assets + property.price - property.loan_outstanding - property.price * 0.2
+        financial_accounts.remaining_cash = financial_accounts.remaining_cash + property.price - property.loan_outstanding - property.price * 0.2
         # Resets the property attributes, to reflect the new mortgage
         property.accrued_gains = property.price - property.purchase_price  # Tracks capital gains
         property.purchase_price = property.price  # Resets house with refinance
@@ -214,7 +207,7 @@ def decision(property, tfsa, rrsp, investment_account, cash_account, interest_ra
     else:
         print("Invalid Choice")
     # Returns updated cash account and # of properties sold thus far in the month
-    return total_liquid_assets, n_dels, capital_gains
+    return financial_accounts, n_dels, capital_gains
 
 
 

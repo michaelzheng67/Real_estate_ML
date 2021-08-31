@@ -12,8 +12,6 @@ from taxes import Taxes
 class Environment:
     def __init__(self):
         self.owned_properties = []
-
-        self.post_tax_money = 100_000
         self.pre_tax_money = 0
         self.saved_monthly_income = 5_000  # placeholder
         self.annual_net_income = 0
@@ -29,6 +27,7 @@ class Environment:
         available_property = self.Sim.new_properties()
 
         self.pre_tax_money += self.saved_monthly_income
+        self.post_tax_money = self.personal_finances.tfsa + self.personal_finances.rrsp + self.personal_finances.investing_account + self.personal_finances.cash_account
         self.annual_net_income += self.saved_monthly_income
 
         self.interest_rate = self.Sim.interest_rate[months]
@@ -37,6 +36,10 @@ class Environment:
 
 
         n_dels = 0
+        print(self.personal_finances.tfsa)
+        print(self.personal_finances.rrsp)
+        print(self.personal_finances.investing_account)
+        print(self.personal_finances.cash_account)
 
         # Taxes
         if (months + 1) % 12 == 0:
@@ -65,12 +68,10 @@ class Environment:
                     temporary_list[i].price, temporary_list[i].total_monthly_payments,
                     temporary_list[i].monthly_principal_payments, temporary_list[i].monthly_interest_payments,
                     temporary_list[i].loan_outstanding))
-            self.post_tax_money, n_dels, self.capital_gains = decision(temporary_list[i], self.personal_finances.tfsa, self.personal_finances.rrsp, self.personal_finances.investing_account, self.personal_finances.cash_account, self.interest_rate,
+            self.personal_finances, n_dels, self.capital_gains = decision(temporary_list[i], self.personal_finances, self.interest_rate,
                                                                        self.owned_properties, i, n_dels)
 
-            self.post_tax_money -= self.capital_gains
             self.pre_tax_money += self.capital_gains
-
             self.annual_net_income += capital_gains * 0.5
 
         # Properties to Buy
@@ -79,6 +80,6 @@ class Environment:
                 "Purchase Price: {0:0.2f}, Rental Yield: {1:0.2f}%, Expenses Rate: {2:0.2f}%, Appreciation Rate: {3:0.4f}% ".format(
                     available_property[i].purchase_price, available_property[i].rent_yield * 100,
                                                           available_property[i].expenses_rate * 100, available_property[i].appreciation_rate * 100 * 12))
-            self.post_tax_money, n_dels, self.capital_gains = decision(available_property[i], self.personal_finances.tfsa, self.personal_finances.rrsp, self.personal_finances.investing_account, self.personal_finances.cash_account, self.interest_rate,
+            self.personal_finances, n_dels, self.capital_gains = decision(available_property[i], self.personal_finances, self.interest_rate,
                                                                        self.owned_properties, i, n_dels)
 
