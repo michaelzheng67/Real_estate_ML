@@ -8,7 +8,7 @@
 # Make update investment accounts to update investment accounts monthly
 
 class Taxes:
-    def __init__(self, cash, inflation, split):
+    def __init__(self, cash, inflation, split):  # Should consider replacing init class with manual entry of allocations
 
         # Initialize bracket amounts for federal and provincial taxes
         # Federal brackets
@@ -25,38 +25,68 @@ class Taxes:
         self.prov_fourth_divider = 220000
 
         # 2021 figures for contribution room (initialize)
-        self.rrsp_contrib_room = 27830
-        self.tfsa_contrib_room = 6000
-        self.carry_tfsa_room = 0
-        self.carry_rrsp_room = 0
+
+        self.rrsp_annual_contrib_room = 27830
+        self.rrsp_total_contrib_room = 0
+        self.tfsa_annual_contrib_room = 6000
+        self.tfsa_total_contrib_room = 0
 
         # Create method to factor in appreciation for investing accounts
         #self.remaining_cash = cash - self.pay_tax_federal(cash) - self.pay_tax_provincial(cash)
         # After-tax money for first payment
         self.remaining_cash = cash
-        self.rrsp = self.rrsp_tax_free(inflation) if cash > self.prov_fourth_divider else 0 # no rrsp contrib unless in highest bracket
-        self.tfsa = self.tfsa_tax_free(self.remaining_cash, inflation)
+        #self.rrsp = self.rrsp_tax_free(inflation) if cash > self.prov_fourth_divider else 0 # no rrsp contrib unless in highest bracket
+        self.rrsp = 0
+        tfsa_used = self.tfsa_tax_free(self.remaining_cash, inflation, new_year=1)
+        print("TFSA Contribution Room", self.tfsa_total_contrib_room)
+        print("Annual Contribution Room", self.tfsa_annual_contrib_room)
+        self.tfsa = tfsa_used
 
         # reflect the change in cash account after depositing into tfsa
-        self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash, inflation)
+        self.remaining_cash -= tfsa_used
 
         self.cash_account = self.remaining_cash * split
         self.investing_account = self.remaining_cash * (1 - split)
         self.remaining_cash = 0
 
+        # keep track of paid taxes for year
+        self.taxes_paid = 0
+
+        #accrued income
+        self.accrued_net_income = 0
+
+        # money that is taxable, but not liquid or to avoid double counting. Ex: principal repayments/capital gains
+        self.income_deduction = 0
+
+# keep track of taxes already paid and add back?
+# add parameter in update_taxes to see if it is a new year or not. If so, increase brackets for inflation and raise contribution limits.
+    def update_taxes(self, new_monthly_income, inflation, split, new_year):
+            self.accrued_net_income += new_monthly_income
+            # determines how much to reduce net income by
+            rrsp_used = self.rrsp_tax_free(self.accrued_net_income, inflation, new_year)
+            self.rrsp += rrsp_used
+            self.accrued_net_income = self.accrued_net_income - rrsp_used
 
 
-    def update_taxes(self, cash, inflation, split):
-            self.remaining_cash = self.remaining_cash + cash - self.pay_tax_federal(cash) - self.pay_tax_provincial(cash)
-            self.rrsp = self.rrsp + (
-                self.rrsp_tax_free(inflation) if cash > 216511 else 0)  # no rrsp contrib unless in highest bracket
-            self.tfsa = self.tfsa + self.tfsa_tax_free(self.remaining_cash, inflation)
+            taxes_payable = self.pay_tax_federal(self.accrued_net_income) + self.pay_tax_provincial(self.accrued_net_income)
+
+            self.remaining_cash = self.remaining_cash + new_monthly_income - (taxes_payable - self.taxes_paid) - self.income_deduction # add new monthly income to remaining cash, subtract new taxes
+            # update taxes paid
+            self.taxes_paid = self.pay_tax_federal(self.accrued_net_income) + self.pay_tax_provincial(self.accrued_net_income)
+
+            # Adds new amount deposited into TFSA
+            tfsa_used = self.tfsa_tax_free(self.remaining_cash, inflation, new_year)
+
+            self.tfsa = self.tfsa + tfsa_used
 
             # reflect the change in cash account after depositing into tfsa
-            self.remaining_cash -= self.tfsa_tax_free(self.remaining_cash,inflation)
+            self.remaining_cash -= tfsa_used
 
             self.cash_account = self.cash_account + self.remaining_cash * split
             self.investing_account = self.investing_account + self.remaining_cash * (1 - split)
+
+
+            self.income_deduction = 0
 
             self.remaining_cash = 0
 
@@ -73,6 +103,45 @@ class Taxes:
             self.prov_second_divider *= inflation
             self.prov_third_divider *= inflation
             self.prov_fourth_divider *= inflation
+
+    # returns how much of TFSA we use that month
+    def tfsa_tax_free(self, cash, inflation, new_year):
+        # update contribution room with inflation, if year end
+        if new_year == 1:
+            self.tfsa_annual_contrib_room = self.tfsa_annual_contrib_room * (1 + inflation)
+            self.tfsa_total_contrib_room = self.tfsa_total_contrib_room + self.tfsa_annual_contrib_room
+
+        if cash < self.tfsa_total_contrib_room: # Not enough to fill up all of TFSA room
+            self.tfsa_total_contrib_room = self.tfsa_total_contrib_room - cash
+            return cash
+        elif cash >= self.tfsa_total_contrib_room: # More than enough to fill up TFSA room
+            total_contrib_room = self.tfsa_total_contrib_room
+            self.tfsa_total_contrib_room = 0
+            return total_contrib_room # Use all of contrib room
+
+    # returns how much of RRSP we use that month
+    def rrsp_tax_free(self, cash, inflation, new_year):
+        # update contrib room every year including inflation
+        if new_year == 1:
+            self.rrsp_annual_contrib_room = self.rrsp_annual_contrib_room * (1 + inflation)
+            # 18% of income or rrsp annual contribution room, which ever is less
+            if self.rrsp_annual_contrib_room <= cash * 0.18:
+                self.rrsp_total_contrib_room += self.rrsp_annual_contrib_room
+            else:
+                self.rrsp_total_contrib_room += cash * 0.18
+
+        # if we fall into highest tax bracket
+        if cash > self.prov_fourth_divider:
+            high_tax_money = cash - self.prov_fourth_divider    # money that falls into the highest bracket
+
+            if high_tax_money < self.rrsp_total_contrib_room:   # Not enough to fill up all of RRSP room (only use until we're out of top tax bracket)
+                self.rrsp_total_contrib_room = self.rrsp_total_contrib_room - high_tax_money
+                return high_tax_money
+            elif high_tax_money >= self.rrsp_total_contrib_room:    # More than enough to fill up RRSP room
+                self.rrsp_total_contrib_room = 0
+                return self.rrsp_total_contrib_room     # Use all of contrib room
+        else:
+            return 0
 
 
     def tfsa_tax_free(self, cash, inflation):
