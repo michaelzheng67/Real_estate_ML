@@ -11,9 +11,13 @@ class Simulation:
 
     # Not sure how accurate these motions with these initials will be
     def __init__(self):
-        self.interest_rate = simulate_brownian_motion(.03)
-        self.inflation = simulate_brownian_motion(.02)
-        self.cash_appreciation = simulate_brownian_motion(.08)
+        # Interest rate (%)
+        self.interest_rate = simulate_brownian_motion(initial=0.05, mu=0, sigma=0.01)
+        # Inflation rate (%)
+        self.inflation = simulate_brownian_motion(initial=0.02, mu=0.00, sigma=0.005)
+        # Stock appreciation, modelled roughly after S&P 500.
+        # -- NOTE -- Let's add some market cycles to simulate bear + bull markets.
+        self.cash_appreciation = simulate_brownian_motion(initial=1, mu=0.083, sigma=0.1589)
 
     @staticmethod
     def new_properties():
@@ -124,6 +128,8 @@ def decision(property, financial_accounts, interest_rate, owned_properties, inde
 
     # Init Variable
     capital_gains = 0
+    rrsp_used = 0
+    investment_used = 0
 
     # --- Decision effects ---
     # Mortgage, 20 year + 20% down
@@ -174,7 +180,7 @@ def decision(property, financial_accounts, interest_rate, owned_properties, inde
         # Adds change in property value since purchase/refinance to capital gains account
         capital_gains = property.accrued_gains + property.price - property.purchase_price
 
-        # Cash account increased by difference between sale price and amount of debt still owing
+        # Pre-allocated cash account increased by difference between sale price and amount of debt still owing
         financial_accounts.remaining_cash = financial_accounts.remaining_cash + property.price - property.loan_outstanding - capital_gains
 
         # Future Note: return gains to main.py or taxes.
@@ -207,7 +213,7 @@ def decision(property, financial_accounts, interest_rate, owned_properties, inde
     else:
         print("Invalid Choice")
     # Returns updated cash account and # of properties sold thus far in the month
-    return financial_accounts, n_dels, capital_gains
+    return financial_accounts, n_dels, capital_gains, rrsp_used, investment_used
 
 
 
