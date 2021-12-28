@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 
 # function is default set to have time horizon of 40 years with monthly step size
